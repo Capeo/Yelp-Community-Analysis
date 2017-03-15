@@ -52,10 +52,10 @@ import org.openide.util.Lookup;
  */
 public class CommunityAnalysis {
 
-    public void script(String filename, double resolution, Boolean visualize, Boolean filterSingles) {
-        Input input = new Input();
-        input.parseJSON(filename);
-        input.transformInput(filterSingles);
+    public void script(String city, double resolution, Boolean visualize, Boolean filterSingles) {
+        Input input = new Input(city);
+        input.parseJSON("join_" + city + "_restaurants.json");
+        input.transformInputReviews(filterSingles);
         input.writeBusinessData();
         //Init a project - and therefore a workspace
         ProjectController pc = Lookup.getDefault().lookup(ProjectController.class);
@@ -71,9 +71,9 @@ public class CommunityAnalysis {
         //Import file
         Container container;
         try {
-            File file = new File("graph.gml");
+            File file = new File("Results\\" + city + "\\graph.gml");
             container = importController.importFile(file);
-            container.getLoader().setEdgeDefault(EdgeDirectionDefault.UNDIRECTED);   //Force DIRECTED
+            container.getLoader().setEdgeDefault(EdgeDirectionDefault.UNDIRECTED);
         } catch (Exception ex) {
             ex.printStackTrace();
             return;
@@ -119,7 +119,9 @@ public class CommunityAnalysis {
             //Export
             ExportController ec = Lookup.getDefault().lookup(ExportController.class);
             try {
-                ec.exportFile(new File("Communities.pdf"));
+                File file = new File("Results\\" + city + "\\image.pdf");
+                file.getParentFile().mkdirs();
+                ec.exportFile(file);
             } catch (IOException ex) {
                 ex.printStackTrace();
                 return;
@@ -127,8 +129,11 @@ public class CommunityAnalysis {
         }
 
         try{
-            AttributeTableCSVExporter.writeCSVFile(graphModel.getGraph(), graphModel.getNodeTable(), new File("nodes.csv"));
-            AttributeTableCSVExporter.writeCSVFile(graphModel.getGraph(), graphModel.getEdgeTable(), new File("edges.csv"));
+            File nodeFile = new File("Results\\" + city + "\\nodes.csv");
+            File edgeFile = new File("Results\\" + city + "\\edges.csv");
+            nodeFile.getParentFile().mkdirs();
+            AttributeTableCSVExporter.writeCSVFile(graphModel.getGraph(), graphModel.getNodeTable(), nodeFile);
+            AttributeTableCSVExporter.writeCSVFile(graphModel.getGraph(), graphModel.getEdgeTable(), edgeFile);
         }catch(IOException ex){
             ex.printStackTrace();
         }

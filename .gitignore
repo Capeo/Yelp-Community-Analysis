@@ -22,7 +22,9 @@
 hs_err_pid*
 
 *.csv
+*.tsv
 *.pdf
 *.gml
 *.iml
 *.xml
+*.json

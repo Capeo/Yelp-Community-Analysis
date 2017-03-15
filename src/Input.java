@@ -8,6 +8,7 @@ import java.util.List;
 import Models.ResultJoin;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mysql.fabric.xmlrpc.base.Array;
+import com.sun.xml.internal.ws.api.ha.StickyFeature;
 
 /**
  * Created by oddca on 22/02/2017.
@@ -17,14 +18,16 @@ public class Input {
     private HashMap<String, Integer> businesses;
     private HashMap<String, ArrayList<String>> reviewedBusinesses;
     private ArrayList<Business> businessInfo;
+    private String city;
 
-    public Input(){
+    public Input(String city){
         businesses = new HashMap<String, Integer>();
         reviewedBusinesses = new HashMap<String, ArrayList<String>>();
         businessInfo = new ArrayList<Business>();
+        this.city = city;
     }
 
-    public void transformInput(Boolean filterSingles){
+    public void transformInputReviews(Boolean filterSingles){
         // Create three hashmaps/dictionaries containing: list of businesses, list of businesses per user, list of edges
         HashMap<Integer, HashMap<Integer, Integer>> edges = new HashMap<Integer, HashMap<Integer, Integer>>();
 
@@ -59,7 +62,9 @@ public class Input {
 
         try {
             int edgeId = 0;
-            PrintWriter graphWriter = new PrintWriter("graph.gml", "UTF-8");
+            File file = new File("Results\\" + city + "\\graph.gml");
+            file.getParentFile().mkdirs();
+            PrintWriter graphWriter = new PrintWriter(file);
             graphWriter.println("graph");
             graphWriter.println("[");
             for (String b : businesses.keySet()){
@@ -79,11 +84,48 @@ public class Input {
                         graphWriter.println("]");
                         edgeId++;
                     }
-
                 }
             }
             graphWriter.println("]");
             graphWriter.close();
+        }
+        catch (IOException e){
+            e.printStackTrace();
+        }
+    }
+
+
+    public void readInputCategories(String filename){
+        HashMap<String, ArrayList<String>> categoriesBusinesses = new HashMap<String, ArrayList<String>>();
+        HashMap<Integer, HashMap<Integer, Integer>> edges = new HashMap<Integer, HashMap<Integer, Integer>>();
+
+        // Read JSON. Create list of businesses and map from categories to list of businesses
+        ObjectMapper mapper = new ObjectMapper();
+        try {
+            BufferedReader reader = new BufferedReader(new FileReader(filename));
+            String line;
+            int businessId = 0;
+            while((line = reader.readLine()) != null){
+                Business bus = mapper.readValue(line, Business.class);
+                businessInfo.add(bus);
+                String busId = bus.getBusinessId();
+                if (!businesses.keySet().contains(busId)){
+                    businesses.put(busId, businessId);
+                    businessId++;
+                }
+                for (String category : bus.getCategories()){
+                    if (reviewedBusinesses.keySet().contains(category)){
+                        if (!reviewedBusinesses.get(category).contains(busId)){
+                            reviewedBusinesses.get(category).add(busId);
+                        }
+                    }
+                    else {
+                        ArrayList<String> businessList = new ArrayList<String>();
+                        businessList.add(busId);
+                        reviewedBusinesses.put(category, businessList);
+                    }
+                }
+            }
         }
         catch (IOException e){
             e.printStackTrace();
@@ -132,7 +174,6 @@ public class Input {
             BufferedReader reader = new BufferedReader(new FileReader(filename));
             String line;
             int businessId = 0;
-            int lineNr = 0;
             while((line = reader.readLine()) != null){
                 Business bus = mapper.readValue(line, Business.class);
                 businessInfo.add(bus);
@@ -155,7 +196,6 @@ public class Input {
                         reviewedBusinesses.put(userId, businessList);
                     }
                 }
-                lineNr++;
             }
         }
         catch (IOException e){
@@ -165,10 +205,18 @@ public class Input {
 
     public void writeBusinessData(){
         try{
-            PrintWriter businessWriter = new PrintWriter("Businesses.csv", "UTF-8");
-            businessWriter.println("businessId, latitude, longitude, categories");
-            for (Business bus : businessInfo){
-                businessWriter.println(bus.getBusinessId() + "," + bus.getLatitude() + "," + bus.getLongitude() + "," + bus.getCategories().toString());
+            File file = new File("Results\\" + city + "\\businesses.csv");
+            file.getParentFile().mkdirs();
+            PrintWriter businessWriter = new PrintWriter(file);
+            businessWriter.println("businessId,latitude,longitude");
+            System.out.println("Size " + businessInfo.size());
+            int i = 0;
+            for (i = 0; i < businessInfo.size(); i++) {
+                Business bus = businessInfo.get(i);
+                businessWriter.println(bus.getBusinessId() + "," + bus.getLatitude() + "," + bus.getLongitude());
+                if(businessWriter.checkError()){
+                    System.out.println("Write error");
+                }
             }
         }
         catch (IOException e){
