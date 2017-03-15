@@ -5,7 +5,7 @@
 
 public class Main {
     public static void main(String[] args){
-        CommunityAnalysis t = new CommunityAnalysis();
-        t.script();
+        CommunityAnalysis communityAnalysis = new CommunityAnalysis();
+        communityAnalysis.script("bus_user_join.json", false);
     }
 }

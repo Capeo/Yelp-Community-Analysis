@@ -1,50 +1,30 @@
+import Models.Business;
+
 import java.io.*;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
+
+import Models.ResultJoin;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.mysql.fabric.xmlrpc.base.Array;
 
 /**
  * Created by oddca on 22/02/2017.
  */
 public class Input {
 
-    public static void TransformInput(String filename){
-        // Create three hashmaps/dictionaries containing: list of businesses, list of businesses per user, list of edges
-        HashMap<String, Integer> businesses = new HashMap<String, Integer>();
-        HashMap<String, ArrayList<String>> reviewedBusinesses = new HashMap<String, ArrayList<String>>();
-        HashMap<Integer, HashMap<Integer, Integer>> edges = new HashMap<Integer, HashMap<Integer, Integer>>();
+    private HashMap<String, Integer> businesses;
+    private HashMap<String, ArrayList<String>> reviewedBusinesses;
 
-        // Read in file
-        try {
-            BufferedReader reader = new BufferedReader(new FileReader(filename));
-            String line;
-            int lineNr = 0;
-            int businessId = 0;
-            while ((line = reader.readLine()) != null){
-                if (lineNr != 0){
-                    String[] parts = line.split(",");
-                    String business = parts[1];
-                    String user = parts[2];
-                    if (!businesses.keySet().contains(business)){
-                        businesses.put(business, businessId);
-                        businessId++;
-                    }
-                    if (reviewedBusinesses.keySet().contains(user)){
-                        if (!reviewedBusinesses.get(user).contains(business)){
-                            reviewedBusinesses.get(user).add(business);
-                        }
-                    }
-                    else {
-                        ArrayList<String> businessList = new ArrayList<String>();
-                        businessList.add(business);
-                        reviewedBusinesses.put(user, businessList);
-                    }
-                }
-                lineNr++;
-            }
-            reader.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+    public Input(){
+        businesses = new HashMap<String, Integer>();
+        reviewedBusinesses = new HashMap<String, ArrayList<String>>();
+    }
+
+    public void transformInput(){
+        // Create three hashmaps/dictionaries containing: list of businesses, list of businesses per user, list of edges
+        HashMap<Integer, HashMap<Integer, Integer>> edges = new HashMap<Integer, HashMap<Integer, Integer>>();
 
         // Create the list of edges based on businesses and reviewedBusinesses
         for (String user : reviewedBusinesses.keySet()){
@@ -76,24 +56,6 @@ public class Input {
         }
 
         try {
-            /*PrintWriter nodeWriter = new PrintWriter("Nodes.csv", "UTF-8");
-            nodeWriter.println("Id,Label");
-            for (String b : businesses.keySet()){
-                nodeWriter.println(businesses.get(b) + "," + b);
-            }
-            nodeWriter.close();
-
-            int edgeId = 0;
-            PrintWriter edgeWriter = new PrintWriter("Edges.csv", "UTF-8");
-            edgeWriter.println("Id,Source,Target,Weight");
-            for (int b1 : edges.keySet()){
-                for (int b2 : edges.get(b1).keySet()){
-                    edgeWriter.println(edgeId + "," + b1 + "," + b2 + "," + edges.get(b1).get(b2));
-                    edgeId++;
-                }
-            }
-            edgeWriter.close();
-    */
             int edgeId = 0;
             PrintWriter graphWriter = new PrintWriter("graph.gml", "UTF-8");
             graphWriter.println("graph");
@@ -117,6 +79,76 @@ public class Input {
             }
             graphWriter.println("]");
             graphWriter.close();
+        }
+        catch (IOException e){
+            e.printStackTrace();
+        }
+    }
+
+
+    public void readCSV(String filename){
+        try {
+            BufferedReader reader = new BufferedReader(new FileReader(filename));
+            String line;
+            int lineNr = 0;
+            int businessId = 0;
+            while ((line = reader.readLine()) != null){
+                if (lineNr != 0){
+                    String[] parts = line.split(",");
+                    String business = parts[1];
+                    String user = parts[2];
+                    if (!businesses.keySet().contains(business)){
+                        businesses.put(business, businessId);
+                        businessId++;
+                    }
+                    if (reviewedBusinesses.keySet().contains(user)){
+                        if (!reviewedBusinesses.get(user).contains(business)){
+                            reviewedBusinesses.get(user).add(business);
+                        }
+                    }
+                    else {
+                        ArrayList<String> businessList = new ArrayList<String>();
+                        businessList.add(business);
+                        reviewedBusinesses.put(user, businessList);
+                    }
+                }
+                lineNr++;
+            }
+            reader.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+
+    public void parseJSON(String filename){
+        ObjectMapper mapper = new ObjectMapper();
+        try {
+            BufferedReader reader = new BufferedReader(new FileReader(filename));
+            String line;
+            int businessId = 0;
+            while((line = reader.readLine()) != null){
+                Business bus = mapper.readValue(line, Business.class);
+                String busId = bus.getBusinessId();
+                List<ResultJoin> reviews = bus.getResultJoin();
+                if (!businesses.keySet().contains(busId)){
+                    businesses.put(busId, businessId);
+                    businessId++;
+                }
+                for(ResultJoin review : reviews){
+                    String userId = review.getUserId();
+                    if (reviewedBusinesses.keySet().contains(userId)){
+                        if (!reviewedBusinesses.get(userId).contains(busId)){
+                            reviewedBusinesses.get(userId).add(busId);
+                        }
+                    }
+                    else {
+                        ArrayList<String> businessList = new ArrayList<String>();
+                        businessList.add(busId);
+                        reviewedBusinesses.put(userId, businessList);
+                    }
+                }
+            }
         }
         catch (IOException e){
             e.printStackTrace();

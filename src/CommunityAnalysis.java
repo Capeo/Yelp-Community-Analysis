@@ -52,8 +52,10 @@ import org.openide.util.Lookup;
  */
 public class CommunityAnalysis {
 
-    public void script() {
-        Input.TransformInput("tip_sample.csv");
+    public void script(String filename, Boolean visualize) {
+        Input input = new Input();
+        input.parseJSON(filename);
+        input.transformInput();
         //Init a project - and therefore a workspace
         ProjectController pc = Lookup.getDefault().lookup(ProjectController.class);
         pc.newProject();
@@ -112,13 +114,15 @@ public class CommunityAnalysis {
         autoLayout.addLayout(secondLayout, 1f, new AutoLayout.DynamicProperty[]{adjustBySizeProperty, repulsionProperty});
         autoLayout.execute();
 
-        //Export
-        ExportController ec = Lookup.getDefault().lookup(ExportController.class);
-        try {
-            ec.exportFile(new File("Communities.pdf"));
-        } catch (IOException ex) {
-            ex.printStackTrace();
-            return;
+        if(visualize){
+            //Export
+            ExportController ec = Lookup.getDefault().lookup(ExportController.class);
+            try {
+                ec.exportFile(new File("Communities.pdf"));
+            } catch (IOException ex) {
+                ex.printStackTrace();
+                return;
+            }
         }
 
         try{
