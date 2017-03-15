@@ -52,10 +52,11 @@ import org.openide.util.Lookup;
  */
 public class CommunityAnalysis {
 
-    public void script(String filename, Boolean visualize) {
+    public void script(String filename, double resolution, Boolean visualize, Boolean filterSingles) {
         Input input = new Input();
         input.parseJSON(filename);
-        input.transformInput();
+        input.transformInput(filterSingles);
+        input.writeBusinessData();
         //Init a project - and therefore a workspace
         ProjectController pc = Lookup.getDefault().lookup(ProjectController.class);
         pc.newProject();
@@ -89,7 +90,7 @@ public class CommunityAnalysis {
         //Run modularity algorithm - community detection
         Modularity modularity = new Modularity();
         modularity.setRandom(true);
-        modularity.setResolution(10);        // Set Resolution
+        modularity.setResolution(resolution);        // Set Resolution
         modularity.execute(graphModel);
         System.out.println("Modularity: " + modularity.getModularity());    // Print Modularity
         System.out.println("Random: " + modularity.getRandom());            // Print Random - True or False

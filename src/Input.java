@@ -16,13 +16,15 @@ public class Input {
 
     private HashMap<String, Integer> businesses;
     private HashMap<String, ArrayList<String>> reviewedBusinesses;
+    private ArrayList<Business> businessInfo;
 
     public Input(){
         businesses = new HashMap<String, Integer>();
         reviewedBusinesses = new HashMap<String, ArrayList<String>>();
+        businessInfo = new ArrayList<Business>();
     }
 
-    public void transformInput(){
+    public void transformInput(Boolean filterSingles){
         // Create three hashmaps/dictionaries containing: list of businesses, list of businesses per user, list of edges
         HashMap<Integer, HashMap<Integer, Integer>> edges = new HashMap<Integer, HashMap<Integer, Integer>>();
 
@@ -68,13 +70,16 @@ public class Input {
             }
             for (int b1 : edges.keySet()){
                 for (int b2 : edges.get(b1).keySet()){
-                    graphWriter.println("edge\n[");
-                    graphWriter.println("id " + edgeId);
-                    graphWriter.println("source " + b1);
-                    graphWriter.println("target " + b2);
-                    graphWriter.println("weight " + edges.get(b1).get(b2));
-                    graphWriter.println("]");
-                    edgeId++;
+                    if(!filterSingles || edges.get(b1).get(b2) > 1){
+                        graphWriter.println("edge\n[");
+                        graphWriter.println("id " + edgeId);
+                        graphWriter.println("source " + b1);
+                        graphWriter.println("target " + b2);
+                        graphWriter.println("weight " + edges.get(b1).get(b2));
+                        graphWriter.println("]");
+                        edgeId++;
+                    }
+
                 }
             }
             graphWriter.println("]");
@@ -127,8 +132,10 @@ public class Input {
             BufferedReader reader = new BufferedReader(new FileReader(filename));
             String line;
             int businessId = 0;
+            int lineNr = 0;
             while((line = reader.readLine()) != null){
                 Business bus = mapper.readValue(line, Business.class);
+                businessInfo.add(bus);
                 String busId = bus.getBusinessId();
                 List<ResultJoin> reviews = bus.getResultJoin();
                 if (!businesses.keySet().contains(busId)){
@@ -148,11 +155,26 @@ public class Input {
                         reviewedBusinesses.put(userId, businessList);
                     }
                 }
+                lineNr++;
             }
         }
         catch (IOException e){
             e.printStackTrace();
         }
+    }
+
+    public void writeBusinessData(){
+        try{
+            PrintWriter businessWriter = new PrintWriter("Businesses.csv", "UTF-8");
+            businessWriter.println("businessId, latitude, longitude, categories");
+            for (Business bus : businessInfo){
+                businessWriter.println(bus.getBusinessId() + "," + bus.getLatitude() + "," + bus.getLongitude() + "," + bus.getCategories().toString());
+            }
+        }
+        catch (IOException e){
+            e.printStackTrace();
+        }
+
     }
 
 }

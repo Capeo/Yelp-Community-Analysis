@@ -18,6 +18,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
  * Created by oddca on 15/03/2017.
  */
 public class Id_ {
+
     @JsonProperty("$oid")
     private String $oid;
     @JsonIgnore

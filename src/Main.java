@@ -6,6 +6,6 @@
 public class Main {
     public static void main(String[] args){
         CommunityAnalysis communityAnalysis = new CommunityAnalysis();
-        communityAnalysis.script("bus_user_join.json", false);
+        communityAnalysis.script("join_Edinburgh_restaurants.json", 1, false, true);
     }
 }

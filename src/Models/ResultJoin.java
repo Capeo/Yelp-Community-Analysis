@@ -23,6 +23,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
  * Created by oddca on 15/03/2017.
  */
 public class ResultJoin {
+
     @JsonProperty("_id")
     private Id_ id;
     @JsonProperty("review_id")
