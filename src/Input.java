@@ -203,17 +203,19 @@ public class Input {
         }
     }
 
-    public void writeBusinessData(){
+    public void writeBusinessData(HashMap<String, Integer> modularityClasses){
         try{
             File file = new File("Results\\" + city + "\\businesses.csv");
             file.getParentFile().mkdirs();
             PrintWriter businessWriter = new PrintWriter(file);
-            businessWriter.println("businessId,latitude,longitude");
+            businessWriter.println("businessId,latitude,longitude,modularity_class");
             System.out.println("Size " + businessInfo.size());
             int i = 0;
             for (i = 0; i < businessInfo.size(); i++) {
                 Business bus = businessInfo.get(i);
-                businessWriter.println(bus.getBusinessId() + "," + bus.getLatitude() + "," + bus.getLongitude());
+                String busId = bus.getBusinessId();
+                Integer modClass = modularityClasses.get(busId);
+                businessWriter.println(busId + "," + bus.getLatitude() + "," + bus.getLongitude() + "," + modClass);
                 if(businessWriter.checkError()){
                     System.out.println("Write error");
                 }

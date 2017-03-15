@@ -3,6 +3,7 @@
 import java.awt.Color;
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.concurrent.TimeUnit;
 
 import org.gephi.appearance.api.AppearanceController;
@@ -14,10 +15,7 @@ import org.gephi.appearance.plugin.PartitionElementColorTransformer;
 import org.gephi.appearance.plugin.palette.Palette;
 import org.gephi.appearance.plugin.palette.PaletteManager;
 import org.gephi.datalab.api.datatables.AttributeTableCSVExporter;
-import org.gephi.graph.api.Column;
-import org.gephi.graph.api.DirectedGraph;
-import org.gephi.graph.api.GraphController;
-import org.gephi.graph.api.GraphModel;
+import org.gephi.graph.api.*;
 import org.gephi.io.exporter.api.ExportController;
 import org.gephi.io.importer.api.Container;
 import org.gephi.io.importer.api.EdgeDirectionDefault;
@@ -56,7 +54,6 @@ public class CommunityAnalysis {
         Input input = new Input(city);
         input.parseJSON("join_" + city + "_restaurants.json");
         input.transformInputReviews(filterSingles);
-        input.writeBusinessData();
         //Init a project - and therefore a workspace
         ProjectController pc = Lookup.getDefault().lookup(ProjectController.class);
         pc.newProject();
@@ -127,6 +124,15 @@ public class CommunityAnalysis {
                 return;
             }
         }
+
+        // Add modularity_class to businesses.tsv
+        HashMap<String, Integer> modularityClasses = new HashMap<String, Integer>();
+        for (Node node : graph.getNodes()){
+            String businessId = node.getLabel();
+            int modClass = (Integer) node.getAttribute("modularity_class");
+            modularityClasses.put(businessId, modClass);
+        }
+        input.writeBusinessData(modularityClasses);
 
         try{
             File nodeFile = new File("Results\\" + city + "\\nodes.csv");
