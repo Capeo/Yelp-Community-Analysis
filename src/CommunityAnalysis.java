@@ -68,7 +68,7 @@ public class CommunityAnalysis {
         //Import file
         Container container;
         try {
-            File file = new File("Results\\" + city + "\\graph.gml");
+            File file = new File("Results/" + city + "/graph.gml");
             container = importController.importFile(file);
             container.getLoader().setEdgeDefault(EdgeDirectionDefault.UNDIRECTED);
         } catch (Exception ex) {
@@ -116,7 +116,7 @@ public class CommunityAnalysis {
             //Export
             ExportController ec = Lookup.getDefault().lookup(ExportController.class);
             try {
-                File file = new File("Results\\" + city + "\\image.pdf");
+                File file = new File("Results/" + city + "/image.pdf");
                 file.getParentFile().mkdirs();
                 ec.exportFile(file);
             } catch (IOException ex) {
@@ -135,8 +135,8 @@ public class CommunityAnalysis {
         input.writeBusinessData(modularityClasses);
 
         try{
-            File nodeFile = new File("Results\\" + city + "\\nodes.csv");
-            File edgeFile = new File("Results\\" + city + "\\edges.csv");
+            File nodeFile = new File("Results/" + city + "/nodes.csv");
+            File edgeFile = new File("Results/" + city + "/edges.csv");
             nodeFile.getParentFile().mkdirs();
             AttributeTableCSVExporter.writeCSVFile(graphModel.getGraph(), graphModel.getNodeTable(), nodeFile);
             AttributeTableCSVExporter.writeCSVFile(graphModel.getGraph(), graphModel.getEdgeTable(), edgeFile);

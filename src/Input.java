@@ -62,7 +62,7 @@ public class Input {
 
         try {
             int edgeId = 0;
-            File file = new File("Results\\" + city + "\\graph.gml");
+            File file = new File("Results/" + city + "/graph.gml");
             file.getParentFile().mkdirs();
             PrintWriter graphWriter = new PrintWriter(file);
             graphWriter.println("graph");
@@ -205,7 +205,7 @@ public class Input {
 
     public void writeBusinessData(HashMap<String, Integer> modularityClasses){
         try{
-            File file = new File("Results\\" + city + "\\" + city + "_businesses.tsv");
+            File file = new File("Results/" + city + "/" + city + "_businesses.tsv");
             file.getParentFile().mkdirs();
             PrintWriter businessWriter = new PrintWriter(file);
             businessWriter.println("businessId\tname\tcity\tstars\tlatitude\tlongitude\treview_count\tattributes\tcategories\tmodularity_class");
