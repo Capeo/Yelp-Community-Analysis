@@ -7,8 +7,6 @@ import java.util.List;
 
 import Models.ResultJoin;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.mysql.fabric.xmlrpc.base.Array;
-import com.sun.xml.internal.ws.api.ha.StickyFeature;
 
 /**
  * Created by oddca on 22/02/2017.
@@ -16,27 +14,27 @@ import com.sun.xml.internal.ws.api.ha.StickyFeature;
 public class Input {
 
     private HashMap<String, Integer> businesses;
-    private HashMap<String, ArrayList<String>> reviewedBusinesses;
+    private HashMap<String, ArrayList<String>> connectedBusinesses;
     private ArrayList<Business> businessInfo;
     private String city;
 
     public Input(String city){
         businesses = new HashMap<String, Integer>();
-        reviewedBusinesses = new HashMap<String, ArrayList<String>>();
+        connectedBusinesses = new HashMap<String, ArrayList<String>>();
         businessInfo = new ArrayList<Business>();
         this.city = city;
     }
 
-    public void transformInputReviews(Boolean filterSingles){
+    public void createNetwork(Boolean filterSingles){
         // Create three hashmaps/dictionaries containing: list of businesses, list of businesses per user, list of edges
         HashMap<Integer, HashMap<Integer, Integer>> edges = new HashMap<Integer, HashMap<Integer, Integer>>();
 
-        // Create the list of edges based on businesses and reviewedBusinesses
-        for (String user : reviewedBusinesses.keySet()){
-            for (int i = 0; i < reviewedBusinesses.get(user).size(); i++) {
+        // Create the list of edges based on businesses and connectedBusinesses
+        for (String connection : connectedBusinesses.keySet()){
+            for (int i = 0; i < connectedBusinesses.get(connection).size(); i++) {
                 for (int j = 0; j < i; j++) {
-                    int business1 = businesses.get(reviewedBusinesses.get(user).get(i));
-                    int business2 = businesses.get(reviewedBusinesses.get(user).get(j));
+                    int business1 = businesses.get(connectedBusinesses.get(connection).get(i));
+                    int business2 = businesses.get(connectedBusinesses.get(connection).get(j));
                     if (business2 > business1){
                         // Swap so that business1 > business2
                         int temp = business1;
@@ -114,15 +112,15 @@ public class Input {
                     businessId++;
                 }
                 for (String category : bus.getCategories()){
-                    if (reviewedBusinesses.keySet().contains(category)){
-                        if (!reviewedBusinesses.get(category).contains(busId)){
-                            reviewedBusinesses.get(category).add(busId);
+                    if (connectedBusinesses.keySet().contains(category)){
+                        if (!connectedBusinesses.get(category).contains(busId)){
+                            connectedBusinesses.get(category).add(busId);
                         }
                     }
                     else {
                         ArrayList<String> businessList = new ArrayList<String>();
                         businessList.add(busId);
-                        reviewedBusinesses.put(category, businessList);
+                        connectedBusinesses.put(category, businessList);
                     }
                 }
             }
@@ -148,15 +146,15 @@ public class Input {
                         businesses.put(business, businessId);
                         businessId++;
                     }
-                    if (reviewedBusinesses.keySet().contains(user)){
-                        if (!reviewedBusinesses.get(user).contains(business)){
-                            reviewedBusinesses.get(user).add(business);
+                    if (connectedBusinesses.keySet().contains(user)){
+                        if (!connectedBusinesses.get(user).contains(business)){
+                            connectedBusinesses.get(user).add(business);
                         }
                     }
                     else {
                         ArrayList<String> businessList = new ArrayList<String>();
                         businessList.add(business);
-                        reviewedBusinesses.put(user, businessList);
+                        connectedBusinesses.put(user, businessList);
                     }
                 }
                 lineNr++;
@@ -168,7 +166,7 @@ public class Input {
     }
 
 
-    public void parseJSON(String filename){
+    public void readInputReviews(String filename){
         ObjectMapper mapper = new ObjectMapper();
         try {
             BufferedReader reader = new BufferedReader(new FileReader(filename));
@@ -185,15 +183,15 @@ public class Input {
                 }
                 for(ResultJoin review : reviews){
                     String userId = review.getUserId();
-                    if (reviewedBusinesses.keySet().contains(userId)){
-                        if (!reviewedBusinesses.get(userId).contains(busId)){
-                            reviewedBusinesses.get(userId).add(busId);
+                    if (connectedBusinesses.keySet().contains(userId)){
+                        if (!connectedBusinesses.get(userId).contains(busId)){
+                            connectedBusinesses.get(userId).add(busId);
                         }
                     }
                     else {
                         ArrayList<String> businessList = new ArrayList<String>();
                         businessList.add(busId);
-                        reviewedBusinesses.put(userId, businessList);
+                        connectedBusinesses.put(userId, businessList);
                     }
                 }
             }
@@ -242,7 +240,6 @@ public class Input {
         catch (IOException e){
             e.printStackTrace();
         }
-
     }
 
 }

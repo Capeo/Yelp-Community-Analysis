@@ -1,6 +1,5 @@
 
 
-import java.awt.Color;
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
@@ -22,8 +21,6 @@ import org.gephi.io.importer.api.EdgeDirectionDefault;
 import org.gephi.io.importer.api.ImportController;
 import org.gephi.io.processor.plugin.DefaultProcessor;
 import org.gephi.layout.plugin.AutoLayout;
-import org.gephi.layout.plugin.force.StepDisplacement;
-import org.gephi.layout.plugin.force.yifanHu.YifanHuLayout;
 import org.gephi.layout.plugin.forceAtlas.ForceAtlasLayout;
 import org.gephi.project.api.ProjectController;
 import org.gephi.project.api.Workspace;
@@ -50,10 +47,15 @@ import org.openide.util.Lookup;
  */
 public class CommunityAnalysis {
 
-    public void script(String city, double resolution, Boolean visualize, Boolean filterSingles) {
+    public void script(String city, NetworkType networkType, double resolution, Boolean visualize, Boolean filterSingles) {
         Input input = new Input(city);
-        input.parseJSON("join_" + city + "_restaurants.json");
-        input.transformInputReviews(filterSingles);
+        if (networkType == NetworkType.Categories){
+            input.readInputCategories("join_" + city + "_restaurants.json");
+        }
+        else {
+            input.readInputReviews("join_" + city + "_restaurants.json");
+        }
+        input.createNetwork(filterSingles);
         //Init a project - and therefore a workspace
         ProjectController pc = Lookup.getDefault().lookup(ProjectController.class);
         pc.newProject();
