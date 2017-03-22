@@ -205,17 +205,35 @@ public class Input {
 
     public void writeBusinessData(HashMap<String, Integer> modularityClasses){
         try{
-            File file = new File("Results\\" + city + "\\businesses.csv");
+            File file = new File("Results\\" + city + "\\" + city + "_businesses.tsv");
             file.getParentFile().mkdirs();
             PrintWriter businessWriter = new PrintWriter(file);
-            businessWriter.println("businessId,latitude,longitude,modularity_class");
+            businessWriter.println("businessId\tname\tcity\tstars\tlatitude\tlongitude\treview_count\tattributes\tcategories\tmodularity_class");
             System.out.println("Size " + businessInfo.size());
             int i = 0;
             for (i = 0; i < businessInfo.size(); i++) {
                 Business bus = businessInfo.get(i);
                 String busId = bus.getBusinessId();
                 Integer modClass = modularityClasses.get(busId);
-                businessWriter.println(busId + "," + bus.getLatitude() + "," + bus.getLongitude() + "," + modClass);
+                businessWriter.print(busId + "\t" + bus.getName() + "\t" + bus.getCity() + "\t" + bus.getStars() + "\t" + bus.getLatitude() + "\t" + bus.getLongitude() + "\t" + bus.getReviewCount() + "\t[");
+                if (bus.getAttributes() != null){
+                    for (int j = 0; j < bus.getAttributes().size(); j++){
+                        businessWriter.print(bus.getAttributes().get(j));
+                        if (j < bus.getAttributes().size() - 1){
+                            businessWriter.print(", ");
+                        }
+                    }
+                }
+                businessWriter.print("]\t[");
+                if (bus.getCategories() != null){
+                    for (int j = 0; j < bus.getCategories().size(); j++){
+                        businessWriter.print(bus.getCategories().get(j));
+                        if (j < bus.getCategories().size() - 1){
+                            businessWriter.print(", ");
+                        }
+                    }
+                }
+                businessWriter.print("]\t" + modClass + "\n");
                 if(businessWriter.checkError()){
                     System.out.println("Write error");
                 }
