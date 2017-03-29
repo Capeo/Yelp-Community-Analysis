@@ -7,6 +7,8 @@ import java.util.List;
 
 import Models.ResultJoin;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.mysql.fabric.xmlrpc.base.Array;
+import org.apache.commons.codec.binary.StringUtils;
 
 /**
  * Created by oddca on 22/02/2017.
@@ -104,7 +106,6 @@ public class Input {
                         graphWriter.println("id " + edgeId);
                         graphWriter.println("source " + b1);
                         graphWriter.println("target " + b2);
-                        System.out.println(edges.get(b1).get(b2));
                         graphWriter.println("weight " + edges.get(b1).get(b2));
                         graphWriter.println("]");
                         edgeId++;
@@ -125,9 +126,6 @@ public class Input {
 
 
     public void readInputCategories(String filename){
-        HashMap<String, ArrayList<String>> categoriesBusinesses = new HashMap<String, ArrayList<String>>();
-        HashMap<Integer, HashMap<Integer, Integer>> edges = new HashMap<Integer, HashMap<Integer, Integer>>();
-
         // Read JSON. Create list of businesses and map from categories to list of businesses
         ObjectMapper mapper = new ObjectMapper();
         try {
@@ -161,6 +159,79 @@ public class Input {
         }
     }
 
+    public void readInputAttributes(String filename){
+        ObjectMapper mapper = new ObjectMapper();
+        try{
+            BufferedReader reader = new BufferedReader(new FileReader(filename));
+            String line;
+            int businessId = 0;
+            while ((line = reader.readLine()) != null){
+                Business bus = mapper.readValue(line, Business.class);
+                businessInfo.add(bus);
+                String busId = bus.getBusinessId();
+                if (!businesses.keySet().contains(busId)){
+                    businesses.put(busId, businessId);
+                    businessId++;
+                }
+                if (bus.getAttributes() != null){
+                    for (String attribute : bus.getAttributes()){
+                        String[] parts = attribute.split(": ");
+                        ArrayList<String> names = getAttributeNames(parts);
+                        for (String name : names){
+                            if (connectedBusinesses.keySet().contains(name)){
+                                if (!connectedBusinesses.get(name).contains(busId)){
+                                    connectedBusinesses.get(name).add(busId);
+                                }
+                            }
+                            else {
+                                ArrayList<String> businessList = new ArrayList<String>();
+                                businessList.add(busId);
+                                connectedBusinesses.put(name, businessList);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        catch (IOException e){
+            e.printStackTrace();
+        }
+    }
+
+    private ArrayList<String> getAttributeNames(String[] parts){
+        ArrayList<String> names = new ArrayList<String>();
+        String nameBase = parts[0].replaceAll("'", "");
+        if (parts.length > 1){
+            // Test if attribute is boolean
+            if (parts[1].equals("True") || parts[1].equals("False")){
+                if (parts[1].equals("True")){
+                    names.add(nameBase);
+                }
+            }
+            // Test if attribute is number
+            else if (isNumeric(parts[1])){
+                names.add(nameBase + ":" + parts[1]);
+            }
+            // Test if attribute list
+            else if (parts[1].startsWith("{")){
+                String l = parts[1].replace("{","").replace("}","");
+                String[] list = l.split(", ");
+                for (String element : list){
+                    String[] subParts = element.split(": ");
+                    names.addAll(getAttributeNames(subParts));
+                }
+            }
+            // Assume attribute is string
+            else {
+                names.add(nameBase + ":" + parts[1]);
+            }
+        }
+        return names;
+    }
+
+    private boolean isNumeric(String str){
+        return str.matches("[-+]?\\d*\\.?\\d+");
+    }
 
     public void readCSV(String filename){
         try {

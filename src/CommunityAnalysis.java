@@ -47,10 +47,13 @@ import org.openide.util.Lookup;
  */
 public class CommunityAnalysis {
 
-    public void script(String city, NetworkType networkType, double resolution, Boolean visualize, Boolean filterSingles) {
-        Input input = new Input(city, networkType, 1);
+    public void script(String city, NetworkType networkType, double resolution, Boolean visualize, Boolean filterSingles, double ratingBias) {
+        Input input = new Input(city, networkType, ratingBias);
         if (networkType == NetworkType.Categories){
             input.readInputCategories("join_" + city + "_restaurants.json");
+        }
+        else if(networkType == NetworkType.Attributes){
+            input.readInputAttributes("join_" + city + "_restaurants.json");
         }
         else {
             input.readInputReviews("join_" + city + "_restaurants.json");
