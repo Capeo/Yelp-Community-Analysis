@@ -2,7 +2,7 @@
 
 import java.io.File;
 import java.io.IOException;
-import java.util.HashMap;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 import org.gephi.appearance.api.AppearanceController;
@@ -48,7 +48,7 @@ import org.openide.util.Lookup;
 public class CommunityAnalysis {
 
     public void script(String city, NetworkType networkType, double resolution, Boolean visualize, Boolean filterSingles) {
-        Input input = new Input(city);
+        Input input = new Input(city, networkType, 1);
         if (networkType == NetworkType.Categories){
             input.readInputCategories("join_" + city + "_restaurants.json");
         }
@@ -129,12 +129,25 @@ public class CommunityAnalysis {
 
         // Add modularity_class to businesses.tsv
         HashMap<String, Integer> modularityClasses = new HashMap<String, Integer>();
+        HashMap<Integer, Integer> communityCount = new HashMap<Integer, Integer>();
         for (Node node : graph.getNodes()){
             String businessId = node.getLabel();
             int modClass = (Integer) node.getAttribute("modularity_class");
             modularityClasses.put(businessId, modClass);
+            if (communityCount.containsKey(modClass)){
+                communityCount.put(modClass, communityCount.get(modClass) + 1);
+            }
+            else {
+                communityCount.put(modClass, 1);
+            }
         }
         input.writeBusinessData(modularityClasses);
+        ArrayList<Integer> values = new ArrayList<Integer>(communityCount.values());
+        Collections.sort(values, Collections.reverseOrder());
+        for (Integer i : values){
+            System.out.print(i + ", ");
+        }
+        System.out.println();
 
         try{
             File nodeFile = new File("Results/" + city + "/nodes.csv");

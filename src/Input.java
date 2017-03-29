@@ -15,24 +15,32 @@ public class Input {
 
     private HashMap<String, Integer> businesses;
     private HashMap<String, ArrayList<String>> connectedBusinesses;
+    private HashMap<String, HashMap<String, Double>> reviewRatings;
     private ArrayList<Business> businessInfo;
     private String city;
+    private NetworkType type;
+    private double ratingBias;
 
-    public Input(String city){
+    public Input(String city, NetworkType type, double ratingBias){
         businesses = new HashMap<String, Integer>();
         connectedBusinesses = new HashMap<String, ArrayList<String>>();
         businessInfo = new ArrayList<Business>();
+        reviewRatings = new HashMap<String, HashMap<String, Double>>();
         this.city = city;
+        this.type = type;
+        this.ratingBias = ratingBias;
     }
 
     public void createNetwork(Boolean filterSingles){
         // Create three hashmaps/dictionaries containing: list of businesses, list of businesses per user, list of edges
-        HashMap<Integer, HashMap<Integer, Integer>> edges = new HashMap<Integer, HashMap<Integer, Integer>>();
+        HashMap<Integer, HashMap<Integer, Double>> edges = new HashMap<Integer, HashMap<Integer, Double>>();
 
         // Create the list of edges based on businesses and connectedBusinesses
         for (String connection : connectedBusinesses.keySet()){
             for (int i = 0; i < connectedBusinesses.get(connection).size(); i++) {
                 for (int j = 0; j < i; j++) {
+                    String busId1 = connectedBusinesses.get(connection).get(i);
+                    String busId2 = connectedBusinesses.get(connection).get(j);
                     int business1 = businesses.get(connectedBusinesses.get(connection).get(i));
                     int business2 = businesses.get(connectedBusinesses.get(connection).get(j));
                     if (business2 > business1){
@@ -41,18 +49,36 @@ public class Input {
                         business1 = business2;
                         business2 = temp;
                     }
-                    if (edges.keySet().contains(business1)){
-                        if (edges.get(business1).keySet().contains(business2)){
-                            edges.get(business1).put(business2, edges.get(business1).get(business2) + 1);
+                    if (type == NetworkType.Ratings){
+                        double ratingDifference = ratingDifference(reviewRatings.get(connection).get(busId1), reviewRatings.get(connection).get(busId2), ratingBias);
+                        if (edges.keySet().contains(business1)){
+                            if (edges.get(business1).keySet().contains(business2)){
+                                edges.get(business1).put(business2, edges.get(business1).get(business2) + ratingDifference);
+                            }
+                            else {
+                                edges.get(business1).put(business2, ratingDifference);
+                            }
                         }
                         else {
-                            edges.get(business1).put(business2, 1);
+                            HashMap<Integer, Double> edge = new HashMap<Integer, Double>();
+                            edge.put(business2, ratingDifference);
+                            edges.put(business1, edge);
                         }
                     }
                     else {
-                        HashMap<Integer, Integer> edge = new HashMap<Integer, Integer>();
-                        edge.put(business2, 1);
-                        edges.put(business1, edge);
+                        if (edges.keySet().contains(business1)){
+                            if (edges.get(business1).keySet().contains(business2)){
+                                edges.get(business1).put(business2, edges.get(business1).get(business2) + 1.0);
+                            }
+                            else {
+                                edges.get(business1).put(business2, 1.0);
+                            }
+                        }
+                        else {
+                            HashMap<Integer, Double> edge = new HashMap<Integer, Double>();
+                            edge.put(business2, 1.0);
+                            edges.put(business1, edge);
+                        }
                     }
                 }
             }
@@ -78,6 +104,7 @@ public class Input {
                         graphWriter.println("id " + edgeId);
                         graphWriter.println("source " + b1);
                         graphWriter.println("target " + b2);
+                        System.out.println(edges.get(b1).get(b2));
                         graphWriter.println("weight " + edges.get(b1).get(b2));
                         graphWriter.println("]");
                         edgeId++;
@@ -90,6 +117,10 @@ public class Input {
         catch (IOException e){
             e.printStackTrace();
         }
+    }
+
+    private double ratingDifference(double rating1, double rating2, double bias){
+        return bias - Math.abs(rating1 - rating2);
     }
 
 
@@ -187,11 +218,17 @@ public class Input {
                         if (!connectedBusinesses.get(userId).contains(busId)){
                             connectedBusinesses.get(userId).add(busId);
                         }
+                        if (!reviewRatings.get(userId).containsKey(busId)){
+                            reviewRatings.get(userId).put(busId, (double) review.getStars());
+                        }
                     }
                     else {
                         ArrayList<String> businessList = new ArrayList<String>();
                         businessList.add(busId);
                         connectedBusinesses.put(userId, businessList);
+                        HashMap<String, Double> reviewScores = new HashMap<String, Double>();
+                        reviewScores.put(busId, (double) review.getStars());
+                        reviewRatings.put(userId, reviewScores);
                     }
                 }
             }
