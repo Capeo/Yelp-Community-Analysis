@@ -47,7 +47,7 @@ import org.openide.util.Lookup;
  */
 public class CommunityAnalysis {
 
-    public void script(String city, NetworkType networkType, double resolution, Boolean visualize, Boolean filterSingles, double ratingBias) {
+    public void script(String city, NetworkType networkType, double resolution, Boolean visualize, Boolean filterSingleEdges, Boolean filterSingleNodes, int edgeFilterThreshold, double ratingBias) {
         Input input = new Input(city, networkType, ratingBias);
         if (networkType == NetworkType.Categories){
             input.readInputCategories("join_" + city + "_restaurants.json");
@@ -58,7 +58,7 @@ public class CommunityAnalysis {
         else {
             input.readInputReviews("join_" + city + "_restaurants.json");
         }
-        input.createNetwork(filterSingles);
+        input.createNetwork(filterSingleEdges, filterSingleNodes, edgeFilterThreshold);
         //Init a project - and therefore a workspace
         ProjectController pc = Lookup.getDefault().lookup(ProjectController.class);
         pc.newProject();

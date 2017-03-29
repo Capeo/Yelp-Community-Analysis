@@ -3,6 +3,7 @@ import Models.Business;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 
 import Models.ResultJoin;
@@ -33,7 +34,7 @@ public class Input {
         this.ratingBias = ratingBias;
     }
 
-    public void createNetwork(Boolean filterSingles){
+    public void createNetwork(Boolean filterSingleEdges, Boolean filterSingleNodes, int edgeFilterThreshold){
         // Create three hashmaps/dictionaries containing: list of businesses, list of businesses per user, list of edges
         HashMap<Integer, HashMap<Integer, Double>> edges = new HashMap<Integer, HashMap<Integer, Double>>();
 
@@ -86,6 +87,8 @@ public class Input {
             }
         }
 
+        HashSet<Integer> connectedNodes = new HashSet<>();
+
         try {
             int edgeId = 0;
             File file = new File("Results/" + city + "/graph.gml");
@@ -93,23 +96,31 @@ public class Input {
             PrintWriter graphWriter = new PrintWriter(file);
             graphWriter.println("graph");
             graphWriter.println("[");
-            for (String b : businesses.keySet()){
-                graphWriter.println("node\n[");
-                graphWriter.println("id " + businesses.get(b));
-                graphWriter.println("label " + b);
-                graphWriter.println("]");
-            }
             for (int b1 : edges.keySet()){
                 for (int b2 : edges.get(b1).keySet()){
-                    if(!filterSingles || edges.get(b1).get(b2) > 1){
+                    if(!filterSingleEdges || edges.get(b1).get(b2) > edgeFilterThreshold){
                         graphWriter.println("edge\n[");
                         graphWriter.println("id " + edgeId);
                         graphWriter.println("source " + b1);
+                        if (!connectedNodes.contains(b1)){
+                            connectedNodes.add(b1);
+                        }
                         graphWriter.println("target " + b2);
+                        if (!connectedNodes.contains(b2)){
+                            connectedNodes.add(b2);
+                        }
                         graphWriter.println("weight " + edges.get(b1).get(b2));
                         graphWriter.println("]");
                         edgeId++;
                     }
+                }
+            }
+            for (String b : businesses.keySet()){
+                if (connectedNodes.contains(businesses.get(b))){
+                    graphWriter.println("node\n[");
+                    graphWriter.println("id " + businesses.get(b));
+                    graphWriter.println("label " + b);
+                    graphWriter.println("]");
                 }
             }
             graphWriter.println("]");
