@@ -116,7 +116,7 @@ public class Input {
                 }
             }
             for (String b : businesses.keySet()){
-                if (connectedNodes.contains(businesses.get(b))){
+                if (!filterSingleNodes || connectedNodes.contains(businesses.get(b))){
                     graphWriter.println("node\n[");
                     graphWriter.println("id " + businesses.get(b));
                     graphWriter.println("label " + b);
@@ -355,6 +355,27 @@ public class Input {
                     System.out.println("Write error");
                 }
             }
+            businessWriter.close();
+        }
+        catch (IOException e){
+            e.printStackTrace();
+        }
+    }
+
+    public void writeVisits(){
+        try{
+            File file = new File("Results/" + city + "/" + city + "_visits.csv");
+            file.getParentFile().mkdirs();
+            PrintWriter visitsWriter = new PrintWriter(file);
+            visitsWriter.println("businessId,userId");
+            for (Business bus : businessInfo){
+                if (bus.getResultJoin() != null){
+                    for (ResultJoin review : bus.getResultJoin()){
+                        visitsWriter.println(review.getBusinessId() + "," + review.getUserId());
+                    }
+                }
+            }
+            visitsWriter.close();
         }
         catch (IOException e){
             e.printStackTrace();

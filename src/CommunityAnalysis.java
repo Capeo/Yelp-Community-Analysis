@@ -59,6 +59,7 @@ public class CommunityAnalysis {
             input.readInputReviews("join_" + city + "_restaurants.json");
         }
         input.createNetwork(filterSingleEdges, filterSingleNodes, edgeFilterThreshold);
+        input.writeVisits();
         //Init a project - and therefore a workspace
         ProjectController pc = Lookup.getDefault().lookup(ProjectController.class);
         pc.newProject();

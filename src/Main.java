@@ -5,6 +5,6 @@
 public class Main {
     public static void main(String[] args){
         CommunityAnalysis communityAnalysis = new CommunityAnalysis();
-        communityAnalysis.script("Edinburgh", NetworkType.Categories, 0.8, false, true, true, 3, 5);
+        communityAnalysis.script("Edinburgh", NetworkType.Categories, 0.8, false, true, false, 1, 5);
     }
 }
