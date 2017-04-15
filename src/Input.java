@@ -10,6 +10,8 @@ import Models.ResultJoin;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mysql.fabric.xmlrpc.base.Array;
 import org.apache.commons.codec.binary.StringUtils;
+import org.gephi.graph.api.*;
+import org.gephi.graph.impl.NodeImpl;
 
 /**
  * Created by oddca on 22/02/2017.
@@ -23,20 +25,20 @@ public class Input {
     private String city;
     private NetworkType type;
     private double ratingBias;
+    private HashMap<Integer, HashMap<Integer, Double>> edges;
 
     public Input(String city, NetworkType type, double ratingBias){
         businesses = new HashMap<String, Integer>();
         connectedBusinesses = new HashMap<String, ArrayList<String>>();
         businessInfo = new ArrayList<Business>();
         reviewRatings = new HashMap<String, HashMap<String, Double>>();
+        edges = new HashMap<Integer, HashMap<Integer, Double>>();
         this.city = city;
         this.type = type;
         this.ratingBias = ratingBias;
     }
 
-    public void createNetwork(Boolean filterSingleEdges, Boolean filterSingleNodes, int edgeFilterThreshold){
-        // Create three hashmaps/dictionaries containing: list of businesses, list of businesses per user, list of edges
-        HashMap<Integer, HashMap<Integer, Double>> edges = new HashMap<Integer, HashMap<Integer, Double>>();
+    public void determineEdges(){
 
         // Create the list of edges based on businesses and connectedBusinesses
         for (String connection : connectedBusinesses.keySet()){
@@ -86,9 +88,10 @@ public class Input {
                 }
             }
         }
+    }
 
+    public void writeGML(Boolean filterSingleEdges, Boolean filterSingleNodes, int edgeFilterThreshold){
         HashSet<Integer> connectedNodes = new HashSet<>();
-
         try {
             int edgeId = 0;
             File file = new File("Results/" + city + "/graph.gml");
@@ -115,6 +118,7 @@ public class Input {
                     }
                 }
             }
+            System.out.println("Connected nodes: " + connectedNodes.size());
             for (String b : businesses.keySet()){
                 if (!filterSingleNodes || connectedNodes.contains(businesses.get(b))){
                     graphWriter.println("node\n[");
@@ -129,6 +133,42 @@ public class Input {
         catch (IOException e){
             e.printStackTrace();
         }
+    }
+
+    public void fillGraph(GraphModel graphModel, Boolean filterSingleEdges, Boolean filterSingleNodes, int edgeFilterThreshold){
+        HashSet<Integer> connectedNodes = new HashSet<>();
+        HashMap<Integer, Node> nodes = new HashMap<Integer, Node>();
+        ArrayList<Edge> graphEdges = new ArrayList<Edge>();
+        GraphFactory factory = graphModel.factory();
+        UndirectedGraph graph = graphModel.getUndirectedGraph();
+
+        for (String b : businesses.keySet()){
+            Node node = factory.newNode(businesses.get(b).toString());
+            node.setLabel(b);
+            nodes.put(businesses.get(b), node);
+        }
+        for (int b1 : edges.keySet()){
+            for (int b2 : edges.get(b1).keySet()){
+                if(!filterSingleEdges || edges.get(b1).get(b2) > edgeFilterThreshold){
+                    Edge edge = factory.newEdge(nodes.get(b1), nodes.get(b2), false);
+                    edge.setWeight(edges.get(b1).get(b2));
+                    if (!connectedNodes.contains(b1)){
+                        connectedNodes.add(b1);
+                    }
+                    if (!connectedNodes.contains(b2)){
+                        connectedNodes.add(b2);
+                    }
+                    graphEdges.add(edge);
+                }
+            }
+        }
+        for (int business : connectedNodes){
+            graph.addNode(nodes.get(business));
+        }
+        for (Edge edge : graphEdges){
+            graph.addEdge(edge);
+        }
+        System.out.println("Connected nodes: " + graph.getNodeCount());
     }
 
     private double ratingDifference(double rating1, double rating2, double bias){
