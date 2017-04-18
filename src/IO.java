@@ -16,7 +16,7 @@ import org.gephi.graph.impl.NodeImpl;
 /**
  * Created by oddca on 22/02/2017.
  */
-public class Input {
+public class IO {
 
     private HashMap<String, Integer> businesses;
     private HashMap<String, ArrayList<String>> connectedBusinesses;
@@ -27,7 +27,7 @@ public class Input {
     private double ratingBias;
     private HashMap<Integer, HashMap<Integer, Double>> edges;
 
-    public Input(String city, NetworkType type, double ratingBias){
+    public IO(String city, NetworkType type, double ratingBias){
         businesses = new HashMap<String, Integer>();
         connectedBusinesses = new HashMap<String, ArrayList<String>>();
         businessInfo = new ArrayList<Business>();
@@ -39,7 +39,6 @@ public class Input {
     }
 
     public void determineEdges(){
-
         // Create the list of edges based on businesses and connectedBusinesses
         for (String connection : connectedBusinesses.keySet()){
             for (int i = 0; i < connectedBusinesses.get(connection).size(); i++) {
@@ -162,8 +161,15 @@ public class Input {
                 }
             }
         }
-        for (int business : connectedNodes){
-            graph.addNode(nodes.get(business));
+        if (filterSingleNodes) {
+            for (int business : connectedNodes) {
+                graph.addNode(nodes.get(business));
+            }
+        }
+        else {
+            for (int business : nodes.keySet()){
+                graph.addNode(nodes.get(business));
+            }
         }
         for (Edge edge : graphEdges){
             graph.addEdge(edge);
@@ -174,7 +180,6 @@ public class Input {
     private double ratingDifference(double rating1, double rating2, double bias){
         return bias - Math.abs(rating1 - rating2);
     }
-
 
     public void readInputCategories(String filename){
         // Read JSON. Create list of businesses and map from categories to list of businesses
@@ -246,6 +251,77 @@ public class Input {
         }
         catch (IOException e){
             e.printStackTrace();
+        }
+    }
+
+    public void readInputAttributesAndCategories(String filename){
+        ObjectMapper mapper = new ObjectMapper();
+        try{
+            BufferedReader reader = new BufferedReader(new FileReader(filename));
+            String line;
+            int businessId = 0;
+            while((line = reader.readLine()) != null){
+                Business bus = mapper.readValue(line, Business.class);
+                businessInfo.add(bus);
+                String busId = bus.getBusinessId();
+                if (!businesses.keySet().contains(busId)){
+                    businesses.put(busId, businessId);
+                    businessId++;
+                }
+                if (bus.getCategories() != null){
+                    for (String category : bus.getCategories()){
+                        if (connectedBusinesses.keySet().contains(category)){
+                            if (!connectedBusinesses.get(category).contains(busId)){
+                                connectedBusinesses.get(category).add(busId);
+                            }
+                        }
+                        else {
+                            ArrayList<String> businessList = new ArrayList<String>();
+                            businessList.add(busId);
+                            connectedBusinesses.put(category, businessList);
+                        }
+                    }
+                }
+                if (bus.getAttributes() != null){
+                    for (String attribute : bus.getAttributes()){
+                        String[] parts = attribute.split(": ");
+                        ArrayList<String> names = getAttributeNames(parts);
+                        for (String name : names){
+                            if (connectedBusinesses.keySet().contains(name)){
+                                if (!connectedBusinesses.get(name).contains(busId)){
+                                    connectedBusinesses.get(name).add(busId);
+                                }
+                            }
+                            else {
+                                ArrayList<String> businessList = new ArrayList<String>();
+                                businessList.add(busId);
+                                connectedBusinesses.put(name, businessList);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        catch (IOException e){
+            e.printStackTrace();
+        }
+    }
+
+    public void transformAttributes(){
+        for (Business business : businessInfo){
+            ArrayList<String> attributeNames = new ArrayList<String>();
+            if (business.getAttributes() != null){
+                for (String attribute : business.getAttributes()){
+                    String[] parts = attribute.split(": ");
+                    ArrayList<String> names = getAttributeNames(parts);
+                    for (String name : names){
+                        if (!attributeNames.contains(name)){
+                            attributeNames.add(name);
+                        }
+                    }
+                }
+            }
+            business.setAttributeNames(attributeNames);
         }
     }
 
@@ -373,10 +449,10 @@ public class Input {
                 String busId = bus.getBusinessId();
                 Integer modClass = modularityClasses.get(busId);
                 businessWriter.print(busId + "\t" + bus.getName() + "\t" + bus.getCity() + "\t" + bus.getStars() + "\t" + bus.getLatitude() + "\t" + bus.getLongitude() + "\t" + bus.getReviewCount() + "\t[");
-                if (bus.getAttributes() != null){
-                    for (int j = 0; j < bus.getAttributes().size(); j++){
-                        businessWriter.print(bus.getAttributes().get(j));
-                        if (j < bus.getAttributes().size() - 1){
+                if (bus.getAttributeNames() != null){
+                    for (int j = 0; j < bus.getAttributeNames().size(); j++){
+                        businessWriter.print(bus.getAttributeNames().get(j));
+                        if (j < bus.getAttributeNames().size() - 1){
                             businessWriter.print(", ");
                         }
                     }

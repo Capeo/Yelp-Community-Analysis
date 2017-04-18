@@ -4,6 +4,7 @@
 public enum NetworkType {
     Attributes,
     Categories,
+    AttributesAndCategories,
     Ratings,
     Reviews;
 }

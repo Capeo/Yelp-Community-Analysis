@@ -8,7 +8,6 @@ import pylab as pl
 ## Undersoke hvordan brukerne fordeler seg paa ulike communities
 
 def user_distribution():
-    
     # Load training data
     data1 = pd.read_csv("Results/Edinburgh/Edinburgh_businesses.tsv", sep="\t")
     data2 = pd.read_csv("Results/Edinburgh/Edinburgh_visits.csv", sep=",")
@@ -18,12 +17,15 @@ def user_distribution():
     n = len(users)
     visits = {}
     communities = {}
+    max_mod_class = 0
     # create dictionary with business and modularity class
     for i in range(0,len(business_ID)):
         if communities.has_key(business_ID[i]):
             pass
         else:
-            communities[business_ID[i]] = modularity[i]
+            if modularity[i] != "null":
+                communities[business_ID[i]] = int(modularity[i])
+                max_mod_class = max(max_mod_class, int(modularity[i]))
     # Create dictionary with users
     for user in users:
         if visits.has_key(user):
@@ -33,16 +35,17 @@ def user_distribution():
     # add a visit to the user dictionary
     for i in range(0,n):
         business = data2["businessId"][i]
-        mod = communities[business]
-        user = data2["userId"][i]
-        visits[user].append(mod)
+        if business in communities:
+            mod = communities[business]
+            user = data2["userId"][i]
+            visits[user].append(mod)
 
     # Find proportion of visit in each community
     proportions = {}
     for key in visits:
         if len(visits[key]) > 10:
             proportions[key] = []
-            for i in range(0,max(modularity)+1):
+            for i in range(0, max_mod_class+1):
                 count = 0.0
                 for j in visits[key]:
                     if j == i:

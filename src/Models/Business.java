@@ -1,5 +1,6 @@
 package Models;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -75,6 +76,8 @@ public class Business {
     private List<ResultJoin> resultJoin = null;
     @JsonIgnore
     private Map<String, Object> additionalProperties = new HashMap<String, Object>();
+
+    private ArrayList<String> attributeNames = new ArrayList<String>();
 
     @JsonProperty("_id")
     public Id getId() {
@@ -264,6 +267,14 @@ public class Business {
     @JsonAnySetter
     public void setAdditionalProperty(String name, Object value) {
         this.additionalProperties.put(name, value);
+    }
+
+    public ArrayList<String> getAttributeNames(){
+        return attributeNames;
+    }
+
+    public void setAttributeNames(ArrayList<String> attributeNames){
+        this.attributeNames = attributeNames;
     }
 
 }

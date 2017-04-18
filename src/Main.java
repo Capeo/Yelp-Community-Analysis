@@ -8,6 +8,6 @@ import java.util.Scanner;
 public class Main {
     public static void main(String[] args){
         CommunityAnalysis communityAnalysis = new CommunityAnalysis();
-        communityAnalysis.script("Edinburgh", NetworkType.Categories, 1, true, true, 1, 5);
+        communityAnalysis.script("Edinburgh", NetworkType.AttributesAndCategories, 1, true, true, 1, 5, false);
     }
 }

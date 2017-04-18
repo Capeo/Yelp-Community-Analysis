@@ -6,28 +6,15 @@ import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 
 import org.gephi.appearance.api.*;
-import org.gephi.appearance.plugin.PartitionElementColorTransformer;
-import org.gephi.appearance.plugin.palette.Palette;
-import org.gephi.appearance.plugin.palette.PaletteManager;
 import org.gephi.datalab.api.datatables.AttributeTableCSVExporter;
 import org.gephi.graph.api.*;
 import org.gephi.graph.impl.GraphModelImpl;
-import org.gephi.io.exporter.api.ExportController;
-import org.gephi.io.importer.api.Container;
-import org.gephi.io.importer.api.EdgeDirectionDefault;
-import org.gephi.io.importer.api.ImportController;
-import org.gephi.io.processor.plugin.DefaultProcessor;
-import org.gephi.layout.plugin.AutoLayout;
-import org.gephi.layout.plugin.forceAtlas.ForceAtlasLayout;
 import org.gephi.project.api.ProjectController;
 import org.gephi.project.api.Workspace;
 import org.gephi.statistics.plugin.Modularity;
 import org.openide.util.Lookup;
-
-import java.nio.file.StandardCopyOption.*;
 
 import static java.nio.file.StandardCopyOption.*;
 
@@ -36,7 +23,7 @@ import static java.nio.file.StandardCopyOption.*;
  */
 public class CommunityAnalysis {
 
-    public void script(String city, NetworkType networkType, double resolution, Boolean filterEdges, Boolean filterSingleNodes, int edgeFilterThreshold, double ratingBias) {
+    public void script(String city, NetworkType networkType, double resolution, Boolean filterEdges, Boolean filterSingleNodes, int edgeFilterThreshold, double ratingBias, Boolean plot) {
         String outPath = "Results/" + city + "/";
         ProjectController pc = Lookup.getDefault().lookup(ProjectController.class);
         pc.newProject();
@@ -45,19 +32,24 @@ public class CommunityAnalysis {
         AppearanceModel appearanceModel = appearanceController.getModel();
         GraphModel graphModel = new GraphModelImpl();
 
-        Input input = new Input(city, networkType, ratingBias);
+        IO input = new IO(city, networkType, ratingBias);
+        String filename = "join_" + city + "_restaurants.json";
         if (networkType == NetworkType.Categories){
-            input.readInputCategories("join_" + city + "_restaurants.json");
+            input.readInputCategories(filename);
         }
         else if(networkType == NetworkType.Attributes){
-            input.readInputAttributes("join_" + city + "_restaurants.json");
+            input.readInputAttributes(filename);
+        }
+        else if(networkType == NetworkType.AttributesAndCategories){
+            input.readInputAttributesAndCategories(filename);
         }
         else {
-            input.readInputReviews("join_" + city + "_restaurants.json");
+            input.readInputReviews(filename);
         }
         input.determineEdges();
         input.fillGraph(graphModel, filterEdges, filterSingleNodes, edgeFilterThreshold);
         input.writeVisits();
+        input.transformAttributes();
 
         //Check that graph is correctly created
         UndirectedGraph graph = graphModel.getUndirectedGraph();
@@ -107,11 +99,14 @@ public class CommunityAnalysis {
         }
 
         // Plot data using python scripts
-        try {
-            Runtime.getRuntime().exec("python community_stats.py " + outPath + city);
-        } catch (IOException e) {
-            e.printStackTrace();
+        if (plot){
+            try {
+                Runtime.getRuntime().exec("python community_stats.py " + outPath + city + "_businesses.tsv");
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
+
 
         // Ask user if data should be saved
         Scanner sc = new Scanner(System.in);
@@ -142,5 +137,6 @@ public class CommunityAnalysis {
                 e.printStackTrace();
             }
         }
+
     }
 }
