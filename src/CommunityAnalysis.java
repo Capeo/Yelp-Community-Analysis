@@ -48,7 +48,6 @@ public class CommunityAnalysis {
         }
         input.determineEdges();
         input.fillGraph(graphModel, filterEdges, filterSingleNodes, edgeFilterThreshold);
-        input.writeVisits();
         input.transformAttributes();
 
         //Check that graph is correctly created
@@ -80,6 +79,8 @@ public class CommunityAnalysis {
             }
         }
         input.writeBusinessData(modularityClasses);
+        input.writeVisits(modularityClasses);
+
         ArrayList<Integer> values = new ArrayList<Integer>(communityCount.values());
         Collections.sort(values, Collections.reverseOrder());
         for (Integer i : values){
@@ -112,6 +113,12 @@ public class CommunityAnalysis {
         Scanner sc = new Scanner(System.in);
         System.out.println("Save result? (y/n): ");
         String save = sc.nextLine().toLowerCase().trim();
+        /*
+        String save = "n";
+        if (modularity.getModularity() > 0.1){
+            save = "y";
+        }
+        */
         if (save.equals("y") || save.equals("yes")){
             try{
                 System.out.println("Enter id: ");

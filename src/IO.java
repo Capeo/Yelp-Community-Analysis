@@ -448,27 +448,29 @@ public class IO {
                 Business bus = businessInfo.get(i);
                 String busId = bus.getBusinessId();
                 Integer modClass = modularityClasses.get(busId);
-                businessWriter.print(busId + "\t" + bus.getName() + "\t" + bus.getCity() + "\t" + bus.getStars() + "\t" + bus.getLatitude() + "\t" + bus.getLongitude() + "\t" + bus.getReviewCount() + "\t[");
-                if (bus.getAttributeNames() != null){
-                    for (int j = 0; j < bus.getAttributeNames().size(); j++){
-                        businessWriter.print(bus.getAttributeNames().get(j));
-                        if (j < bus.getAttributeNames().size() - 1){
-                            businessWriter.print(", ");
+                if (modClass != null){
+                    businessWriter.print(busId + "\t" + bus.getName() + "\t" + bus.getCity() + "\t" + bus.getStars() + "\t" + bus.getLatitude() + "\t" + bus.getLongitude() + "\t" + bus.getReviewCount() + "\t[");
+                    if (bus.getAttributeNames() != null){
+                        for (int j = 0; j < bus.getAttributeNames().size(); j++){
+                            businessWriter.print(bus.getAttributeNames().get(j));
+                            if (j < bus.getAttributeNames().size() - 1){
+                                businessWriter.print(", ");
+                            }
                         }
                     }
-                }
-                businessWriter.print("]\t[");
-                if (bus.getCategories() != null){
-                    for (int j = 0; j < bus.getCategories().size(); j++){
-                        businessWriter.print(bus.getCategories().get(j));
-                        if (j < bus.getCategories().size() - 1){
-                            businessWriter.print(", ");
+                    businessWriter.print("]\t[");
+                    if (bus.getCategories() != null){
+                        for (int j = 0; j < bus.getCategories().size(); j++){
+                            businessWriter.print(bus.getCategories().get(j));
+                            if (j < bus.getCategories().size() - 1){
+                                businessWriter.print(", ");
+                            }
                         }
                     }
-                }
-                businessWriter.print("]\t" + modClass + "\n");
-                if(businessWriter.checkError()){
-                    System.out.println("Write error");
+                    businessWriter.print("]\t" + modClass + "\n");
+                    if(businessWriter.checkError()){
+                        System.out.println("Write error");
+                    }
                 }
             }
             businessWriter.close();
@@ -478,14 +480,16 @@ public class IO {
         }
     }
 
-    public void writeVisits(){
+    public void writeVisits(HashMap<String, Integer> modularityClasses){
         try{
             File file = new File("Results/" + city + "/" + city + "_visits.csv");
             file.getParentFile().mkdirs();
             PrintWriter visitsWriter = new PrintWriter(file);
             visitsWriter.println("businessId,userId");
             for (Business bus : businessInfo){
-                if (bus.getResultJoin() != null){
+                String busId = bus.getBusinessId();
+                Integer modClass = modularityClasses.get(busId);
+                if (modClass != null && bus.getResultJoin() != null){
                     for (ResultJoin review : bus.getResultJoin()){
                         visitsWriter.println(review.getBusinessId() + "," + review.getUserId());
                     }

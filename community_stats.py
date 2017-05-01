@@ -153,6 +153,7 @@ def plot_attributes(modClasses, modClassCount, attributeCount, sorted_attributeC
     plt.axis((x1,x2,0,1))
     plt.xticks(x, attributes, rotation="vertical")
     plt.legend(bars, labels, title="Class, Count")
+    plt.tight_layout()
     plt.show()
 
 
